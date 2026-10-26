@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7fb">
+  <title>网格消消乐 · 记忆对决</title>
+  <style>
+    :root { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; color: #1c2334; background: #f6f7fb; }
+    * { box-sizing: border-box; }
+    body { min-width: 0; min-height: 100vh; margin: 0; overflow-x: hidden; background: radial-gradient(circle at 10% 14%, #e7ecff 0, transparent 32%), radial-gradient(circle at 87% 9%, #eee7ff 0, transparent 31%), radial-gradient(circle at 72% 88%, #dff5f6 0, transparent 33%), #f6f7fb; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible { outline: 3px solid #7869e8; outline-offset: 3px; }
+    .app { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 38px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #1b2131; font-size: 15px; font-weight: 800; letter-spacing: .02em; }
+    .brand-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 12px; background: #171b29; color: white; box-shadow: 0 6px 15px #2a315329; font-size: 18px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .text-button { border: 0; background: transparent; color: #687187; font-size: 13px; font-weight: 650; padding: 10px 12px; border-radius: 10px; }
+    .text-button:hover { background: #ffffffb8; color: #1c2334; }
+    .glass { border: 1px solid #ffffffd9; background: #ffffffb3; box-shadow: 0 20px 70px #62729819, inset 0 1px #fff; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); }
+    .start-layout { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; align-content: center; gap: 28px; width: min(100%, 680px); min-height: calc(100vh - 100px); margin: 0 auto; padding: 40px 16px 55px; text-align: center; }
+    .start-layout > div:first-child { width: 100%; }
+    .eyebrow { color: #7464ca; text-transform: uppercase; letter-spacing: .18em; font-size: 11px; font-weight: 900; }
+    h1 { margin: 17px 0 18px; font-size: clamp(45px, 6vw, 75px); line-height: 1.12; letter-spacing: -.065em; }
+    .lead { max-width: 470px; color: #697389; font-size: 16px; line-height: 1.85; margin: 0 auto 32px; }
+    .control-label { display: block; margin: 0 0 11px; font-size: 13px; font-weight: 800; color: #30394d; }
+    .control-group { margin-bottom: 23px; }
+    .segmented { display: inline-flex; flex-wrap: wrap; gap: 6px; padding: 5px; border-radius: 16px; background: #e9ebf4bb; border: 1px solid #fff; }
+    .segmented button { border: 0; border-radius: 12px; background: transparent; color: #6b7489; font-size: 13px; font-weight: 720; padding: 10px 17px; transition: background .2s, color .2s, box-shadow .2s; }
+    .segmented button.active { color: #1b2131; background: #fff; box-shadow: 0 3px 11px #36426317; }
+    .primary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 24px; border: 1px solid #111722; border-radius: 15px; background: #171b27; color: #fff; font-weight: 780; box-shadow: 0 12px 26px #1e263331; transition: transform .2s, box-shadow .2s; }
+    .primary:hover { transform: translateY(-2px); box-shadow: 0 17px 29px #1e26333b; }
+    .secondary { min-height: 47px; padding: 0 20px; border: 1px solid #dce1eb; border-radius: 14px; background: #fff9; color: #344056; font-weight: 750; }
+    .secondary:hover { background: #fff; }
+    .helper { margin: 15px 0 0; font-size: 12px; line-height: 1.6; color: #929aac; }
+    .showcase { width: min(100%, 430px); padding: 25px; border-radius: 31px; }
+    .showcase-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 19px; color: #6e7890; font-size: 11px; font-weight: 800; letter-spacing: .07em; }
+    .showcase-top strong { color: #242b3a; font-size: 13px; }
+    .showcase-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .sample-card { display: grid; place-items: center; aspect-ratio: 1; border-radius: 16px; background: #eff1f7; color: #8e93b6; box-shadow: inset 0 1px #fff; font-size: clamp(20px, 3.1vw, 39px); }
+    .sample-card.face { background: #fff; box-shadow: 0 8px 22px #8290b127; }
+    .sample-card.back::after { content: "✦"; font-size: .63em; color: #a6aaca; }
+    .showcase-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 20px; font-size: 11px; font-weight: 750; color: #838da2; }
+    .showcase-foot span:last-child { color: #7b6cc9; }
+    #gameScreen { width: min(100%, 940px); margin: 0 auto; padding-top: 30px; }
+    .game-heading { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+    .game-heading h2 { margin: 7px 0 4px; font-size: clamp(28px, 4vw, 38px); letter-spacing: -.045em; }
+    .game-heading p { margin: 0; color: #8790a3; font-size: 13px; }
+    .game-content { display: grid; grid-template-columns: minmax(0, 1fr) 222px; gap: 20px; align-items: start; }
+    .board-shell { position: relative; min-width: 0; padding: clamp(12px, 2.5vw, 25px); border-radius: 27px; }
+    .board { display: grid; grid-template-columns: repeat(var(--cols, 4), minmax(0, 1fr)); gap: clamp(4px, 1vw, 10px); width: 100%; }
+    .card { position: relative; min-width: 0; aspect-ratio: 1; padding: 0; display: grid; place-items: center; border: 1px solid #e7e9f1; border-radius: clamp(6px, 1.6vw, 17px); background: #eff1f7; color: transparent; box-shadow: inset 0 1px #fff; font-size: clamp(15px, 3.2vw, 36px); line-height: 1; transition: transform .2s, background .25s, box-shadow .25s, opacity .25s; touch-action: manipulation; }
+    .card::after { content: "✦"; position: absolute; inset: 0; display: grid; place-items: center; color: #aeb4ce; font-size: .55em; transition: opacity .18s; }
+    .card:hover:not(.flipped):not(.matched):not(:disabled) { transform: translateY(-3px); background: #e9ecf7; }
+    .card.flipped { background: #fff; color: #202638; border-color: #fff; box-shadow: 0 8px 20px #7b8aaf26; transform: translateY(-2px); }
+    .card.flipped::after, .card.matched::after { opacity: 0; }
+    .card.matched { background: #f6f8fd; color: transparent; border-color: transparent; box-shadow: none; opacity: .23; transform: scale(.88); }
+    .card:disabled { cursor: default; }
+    .board-overlay { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; padding: 18px; border-radius: inherit; background: #f9faffd9; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); text-align: center; }
+    .board-overlay[hidden], [hidden] { display: none !important; }
+    .overlay-card { max-width: 390px; }
+    .overlay-icon { display: grid; place-items: center; width: 56px; height: 56px; margin: 0 auto 15px; border-radius: 18px; background: #ece9ff; color: #7565d8; font-size: 27px; }
+    .overlay-card h3 { margin: 0 0 8px; font-size: 27px; letter-spacing: -.03em; }
+    .overlay-card p { color: #727d91; font-size: 14px; line-height: 1.7; margin: 0 0 23px; }
+    .overlay-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; }
+    .sidebar { display: grid; gap: 14px; }
+    .side-card { padding: 20px; border-radius: 22px; }
+    .side-title { margin: 0 0 15px; color: #8690a3; font-size: 11px; font-weight: 850; letter-spacing: .12em; text-transform: uppercase; }
+    .player-panel { border: 1px solid transparent; border-radius: 16px; padding: 14px; background: #f3f5fa9c; transition: background .25s, border-color .25s, box-shadow .25s; }
+    .player-panel + .player-panel { margin-top: 9px; }
+    .player-panel.active { background: #fff; border-color: #d8d4ff; box-shadow: 0 5px 17px #9b92da26; }
+    .player-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #6d778c; font-size: 12px; font-weight: 750; }
+    .player-head .avatar { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 4px; border-radius: 8px; background: #e7eaff; }
+    .score { margin-top: 7px; font-size: 29px; font-weight: 850; letter-spacing: -.04em; color: #20273a; font-variant-numeric: tabular-nums; }
+    .timer-row { display: flex; align-items: center; gap: 16px; }
+    .timer { --progress: 100%; display: grid; place-items: center; width: 72px; height: 72px; flex: none; border-radius: 50%; background: conic-gradient(#7967d8 var(--progress), #e9eaf2 0); }
+    .timer-inner { display: grid; place-items: center; width: 59px; height: 59px; border-radius: 50%; background: #fafbff; }
+    .timer-value { font-size: 24px; font-weight: 850; font-variant-numeric: tabular-nums; }
+    .timer-caption { color: #7b8599; font-size: 12px; line-height: 1.6; }
+    .timer-caption strong { display: block; color: #273149; font-size: 13px; }
+    .status-line { display: flex; align-items: start; gap: 9px; color: #636f84; font-size: 12px; line-height: 1.6; }
+    .status-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; margin-top: 5px; background: #8874dd; box-shadow: 0 0 0 4px #8874dd1b; }
+    .stats { display: flex; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid #e6e9f1; color: #8a93a4; font-size: 12px; }
+    .stats strong { color: #263044; }
+    .footer-note { margin: 20px 2px 0; color: #9da5b5; text-align: center; font-size: 11px; }
+    dialog { width: min(450px, calc(100% - 32px)); border: 1px solid #fff; border-radius: 23px; padding: 26px; color: #252d40; }
+    dialog::backdrop { background: #242a4266; backdrop-filter: blur(7px); }
+    dialog h2 { margin: 0 0 15px; font-size: 24px; }
+    dialog p, dialog li { color: #657086; font-size: 14px; line-height: 1.8; }
+    dialog ol { padding-left: 20px; }
+    dialog .secondary { margin-top: 9px; }
+    select { font: inherit; max-width: 100%; border: 1px solid #dce1eb; border-radius: 12px; padding: 11px 14px; background: #fff; color: #344056; }
+    select:focus-visible { outline: 3px solid #7869e8; outline-offset: 3px; }
+    .settings-row { display: flex; justify-content: center; flex-wrap: wrap; gap: 16px; }
+    .card[aria-disabled="true"] { cursor: default; }
+    .board-shell.paused .card { visibility: hidden; }
+    .summary { margin: 16px 0; padding: 12px; background: #eeedf7; border-radius: 12px; text-align: left; font-size: 12px; color: #505e76; line-height: 1.7; }
+    .summary table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .summary th, .summary td { padding: 5px 3px; text-align: right; }
+    .summary th:first-child, .summary td:first-child { text-align: left; }
+    .summary p { font-size: 12px; margin: 5px 0; }
+    .overlay-card { max-width: 450px; width: 100%; flex: none; margin: auto; }
+    .board-overlay { display: flex; flex-direction: column; overflow-y: auto; }
+    #historyDialog { width: min(620px, calc(100% - 24px)); max-height: 85vh; }
+    .history-item { padding: 12px 0; border-bottom: 1px solid #e2e5ef; }
+    .history-item strong { font-size: 14px; }
+    .history-item p { margin: 5px 0; font-size: 12px; }
+    #historyContent { overflow-wrap: anywhere; }
+    .brand, .top-actions { flex-shrink: 0; white-space: nowrap; }
+    .topbar { flex-wrap: wrap; }
+    .top-actions { margin-left: auto; }
+    .board-shell.results .board { display: none; }
+    .board-shell.results .board-overlay { position: relative; inset: auto; min-height: 350px; padding: 20px 8px; overflow: visible; }
+    @media (max-width: 480px) { .topbar { gap: 8px; } .top-actions { gap: 0; } .top-actions .text-button { font-size: 12px; padding: 10px 8px; } }
+    @media (max-width: 800px) { .start-layout { grid-template-columns: 1fr; gap: 30px; padding: 55px 10px 35px; } .showcase { max-width: 470px; transform: none; } .game-content { grid-template-columns: 1fr; } .sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); } .sidebar .side-card:last-child { grid-column: 1 / -1; } }
+    @media (max-width: 480px) { .app { width: calc(100% - 24px); padding-top: 13px; } .start-layout { padding: 55px 2px 25px; } .showcase { padding: 17px; } .showcase-grid { gap: 7px; } .sample-card { border-radius: 12px; } #gameScreen { padding-top: 23px; } .game-heading { align-items: start; } .game-heading h2 { font-size: 26px; } .board-shell { padding: 8px; border-radius: 16px; } .board { gap: 4px; } .card { font-size: clamp(13px, 5vw, 25px); border-radius: 7px; } .sidebar { gap: 9px; } .side-card { padding: 13px; border-radius: 16px; } .player-panel { padding: 9px; } .score { font-size: 23px; } .timer { width: 56px; height: 56px; } .timer-inner { width: 45px; height: 45px; } .timer-value { font-size: 19px; } .timer-row { gap: 9px; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span><span>网格消消乐</span></div>
+      <div class="top-actions"><button class="text-button" id="historyButton" type="button">战绩</button><button class="text-button" id="rulesButton" type="button">玩法规则</button><button class="text-button" id="homeButton" type="button" hidden>返回首页</button></div>
+    </header>
+
+    <section id="startScreen" class="start-layout" aria-labelledby="startTitle">
+      <div>
+        <div class="eyebrow">MEMORY MATCH · 记忆对决</div>
+        <h1 id="startTitle">翻开记忆，<br>赢下这一局。</h1>
+        <p class="lead">预览牌面，记住位置。轮流翻开两张牌，配对成功就能继续行动。挑战三关，或选一关专心练习。</p>
+        <div class="settings-row">
+          <div class="control-group"><label class="control-label" for="sessionSelect">游戏关卡</label><select id="sessionSelect"><option value="campaign">三关挑战</option><option value="0">单关练习 · 4 × 4</option><option value="1">单关练习 · 6 × 6</option><option value="2">单关练习 · 8 × 8</option></select></div>
+          <div class="control-group"><label class="control-label" for="previewSelect">预览时长</label><select id="previewSelect"><option value="auto">按棋盘调整 · 4 / 7 / 10 秒</option><option value="5000">每关 5 秒</option><option value="10000">每关 10 秒</option><option value="15000">每关 15 秒</option></select></div>
+        </div>
+        <div class="control-group">
+          <span class="control-label">对战模式</span>
+          <div class="segmented" role="group" aria-label="对战模式"><button type="button" class="active" data-mode="pve" aria-pressed="true">人机对战</button><button type="button" data-mode="pvp" aria-pressed="false">双人对战</button></div>
+        </div>
+        <div class="control-group" id="difficultyGroup">
+          <span class="control-label">电脑难度</span>
+          <div class="segmented" role="group" aria-label="电脑难度"><button type="button" data-difficulty="easy" aria-pressed="false">轻松</button><button type="button" class="active" data-difficulty="normal" aria-pressed="true">标准</button><button type="button" data-difficulty="hard" aria-pressed="false">挑战</button></div>
+          <p class="helper" id="difficultyHint"></p>
+        </div>
+        <button class="primary" id="startButton" type="button">开始游戏 <span aria-hidden="true">↗</span></button>
+        <p class="helper">无需联网 · 支持键盘操作 · 两人可共用一台设备</p>
+      </div>
+      <div class="showcase glass" aria-hidden="true">
+        <div class="showcase-top"><strong>记忆对决</strong><span>LEVEL 01 / 03</span></div>
+        <div class="showcase-grid">
+          <span class="sample-card face">🌙</span><span class="sample-card back"></span><span class="sample-card face">🪐</span><span class="sample-card back"></span>
+          <span class="sample-card back"></span><span class="sample-card face">⭐</span><span class="sample-card back"></span><span class="sample-card face">🌙</span>
+          <span class="sample-card face">🌈</span><span class="sample-card back"></span><span class="sample-card face">🪐</span><span class="sample-card back"></span>
+          <span class="sample-card back"></span><span class="sample-card face">⭐</span><span class="sample-card back"></span><span class="sample-card face">🌈</span>
+        </div>
+        <div class="showcase-foot"><span>看一眼，记住它。</span><span>✦ 配对成功，继续行动</span></div>
+      </div>
+    </section>
+
+    <section id="gameScreen" hidden aria-label="游戏棋盘">
+      <div class="game-heading"><div><div class="eyebrow">MEMORY MATCH</div><h2>第 <span id="stageNumber">1</span> 关</h2><p id="stageMeta">4 × 4 网格 · 8 组配对</p></div><button class="text-button" id="restartButton" type="button">重新开始 ↗</button></div>
+      <div class="game-content">
+        <div class="board-shell glass">
+          <div class="board" id="board" role="group" aria-label="记忆卡牌"></div>
+          <div class="board-overlay" id="boardOverlay" hidden></div>
+        </div>
+        <aside class="sidebar">
+          <div class="side-card glass"><p class="side-title">当前比分</p><div id="humanPanel" class="player-panel"><div class="player-head"><span><span class="avatar" aria-hidden="true">🙂</span><span id="humanLabel">玩家</span></span><span id="humanTurnMark"></span></div><div class="score" id="humanScore">0.00</div></div><div id="aiPanel" class="player-panel"><div class="player-head"><span><span class="avatar" aria-hidden="true">✨</span><span id="aiLabel">电脑</span></span><span id="aiTurnMark"></span></div><div class="score" id="aiScore">0.00</div></div></div>
+          <div class="side-card glass"><p class="side-title">回合倒计时</p><div class="timer-row"><div class="timer" id="timer" role="timer" aria-label="剩余秒数"><div class="timer-inner"><span class="timer-value" id="timerValue">10</span></div></div><div class="timer-caption"><strong id="timerOwner">玩家回合</strong>时间结束后<br>自动换人</div></div></div>
+          <div class="side-card glass"><p class="side-title">游戏状态</p><div class="status-line" role="status" aria-live="polite"><span class="status-dot" id="statusDot"></span><span id="statusText">准备开始</span></div><div class="stats"><span>剩余配对</span><strong id="pairsLeft">8 组</strong></div></div>
+        </aside>
+      </div>
+      <p class="footer-note">方向键移动 · Enter / 空格翻牌 · Tab 切换区域 · 查看规则或战绩时自动暂停</p>
+    </section>
+  </main>
+
+  <dialog id="rulesDialog" class="glass" aria-labelledby="rulesTitle"><h2 id="rulesTitle">玩法规则</h2><ol><li>可挑战 4×4、6×6、8×8 三关，也可选择任一关练习。默认预览分别为 4、7、10 秒，开始前可调整。</li><li>在倒计时内翻开两张牌，相同就得分并继续，不同则盖回并换人。超时也会换人。</li><li>方向键在棋盘内移动，Enter 或空格翻牌，Tab 切换区域。</li><li>查看规则或战绩时，棋盘遮住，预览、倒计时及电脑行动全部暂停；关闭窗口后恢复。</li><li>电脑只使用看过的牌。轻松、标准、挑战最多记住 4、8、16 张；预览时每 1.5 秒最多尝试记住一张，仍有遗忘概率。</li><li>人机模式：玩家每组得 1 分，电脑每组得 0.15 分。双人模式：双方每组得 1 分。</li><li>配对成功率 = 成功配对次数 ÷ 完成两张翻牌的次数；只翻一张后超时不计入这个比例，会单独记录超时次数。完成对局后保存最近 20 场战绩至本浏览器。</li></ol><button class="secondary" id="closeRulesButton" type="button">知道了</button></dialog>
+  <dialog id="historyDialog" class="glass" aria-labelledby="historyTitle"><h2 id="historyTitle">最近战绩</h2><div id="historyContent"></div><button class="secondary" id="closeHistoryButton" type="button">关闭</button></dialog>
+
+  <script>
+'use strict';
+const LEVELS = [
+  { size: 4, pairs: 8, seconds: 10, preview: 4000 },
+  { size: 6, pairs: 18, seconds: 8, preview: 7000 },
+  { size: 8, pairs: 32, seconds: 6, preview: 10000 }
+];
+const DIFFICULTIES = {
+  easy: { remember: .45, skill: .52, delay: 760, capacity: 4 },
+  normal: { remember: .72, skill: .78, delay: 620, capacity: 8 },
+  hard: { remember: .90, skill: .96, delay: 480, capacity: 16 }
+};
+const GLYPHS = ['🌙','⭐','☀️','🌈','🪐','🚀','🌸','🍀','🎈','🦋','🍓','🍋','🍉','🍪','🎯','🎵','🎲','🧩','💎','🔮','🪁','🐳','🐻','🦊','🐱','🐼','🐸','🌻','🍄','⚡','❄️','🔥'];
+const HISTORY_KEY = 'memory-duel-history-v1';
+const $ = id => document.getElementById(id);
+let gameMode = 'pve', difficulty = 'normal', nonceCounter = 0, turnTimer = null;
+const jobs = new Set();
+let historySaved = true;
+let history = readHistory();
+let state = freshState();
+
+function counters() { return { flips: 0, attempts: 0, matches: 0, timeouts: 0, points: 0 }; }
+function freshState() {
+  return { level: 0, scores: { human: 0, ai: 0 }, turn: 'human', cards: [], selected: [], matchedPairs: 0,
+    busy: true, running: false, paused: false, phase: 'idle', deadline: 0, nonce: ++nonceCounter,
+    memory: new Map(), memoryAge: new Map(), age: 0, focusId: 0, rounds: [], round: null,
+    session: 'campaign', previewChoice: 'auto', pausedAt: 0, levelPaused: 0, levelStarted: 0 };
+}
+// All delayed game actions share one scheduler so a dialog can freeze any phase.
+function armJob(job) {
+  job.due = performance.now() + job.remaining;
+  job.timer = setTimeout(() => {
+    jobs.delete(job);
+    if (state.running && !state.paused && state.nonce === job.nonce) job.callback();
+  }, job.remaining);
+}
+function later(callback, delay) {
+  const job = { callback, remaining: delay, nonce: state.nonce, timer: null, due: 0 };
+  jobs.add(job);
+  if (!state.paused) armJob(job);
+}
+function invalidate() {
+  state.nonce = ++nonceCounter;
+  clearInterval(turnTimer); turnTimer = null;
+  for (const job of jobs) clearTimeout(job.timer);
+  jobs.clear();
+}
+function tick() {
+  if (!state.running || state.paused) return;
+  if (state.phase !== 'preview' && state.phase !== 'turn') return;
+  const duration = state.phase === 'preview' ? previewDuration() : LEVELS[state.level].seconds * 1000;
+  const remaining = Math.max(0, state.deadline - performance.now());
+  showTimer(duration / 1000, remaining / duration);
+  if (remaining <= 0 && state.phase === 'turn') onTurnTimeout(state.nonce);
+}
+function startTicker() {
+  clearInterval(turnTimer);
+  turnTimer = setInterval(tick, 50);
+  tick();
+}
+function pauseGame() {
+  if (!state.running || state.paused) return;
+  tick();
+  state.paused = true;
+  state.pausedAt = performance.now();
+  clearInterval(turnTimer); turnTimer = null;
+  for (const job of jobs) {
+    clearTimeout(job.timer);
+    job.remaining = Math.max(0, job.due - state.pausedAt);
+  }
+  $('board').parentElement.classList.add('paused');
+  renderBoard(); renderScores();
+}
+function resumeGame() {
+  if (!state.paused || $('rulesDialog').open || $('historyDialog').open) return;
+  const elapsed = performance.now() - state.pausedAt;
+  state.deadline += elapsed;
+  state.levelPaused += elapsed;
+  state.paused = false;
+  $('board').parentElement.classList.remove('paused');
+  for (const job of jobs) armJob(job);
+  if (state.phase === 'turn' || state.phase === 'preview') startTicker();
+  renderBoard(); renderScores();
+}
+function openDialog(id) { pauseGame(); $(id).showModal(); }
+function setGameMode(mode) {
+  if (!['pve', 'pvp'].includes(mode)) return;
+  gameMode = mode;
+  document.querySelectorAll('[data-mode]').forEach(button => {
+    const active = button.dataset.mode === mode;
+    button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+  });
+  $('difficultyGroup').hidden = mode === 'pvp';
+  $('aiLabel').textContent = actorName('ai'); $('humanLabel').textContent = actorName('human');
+}
+function setDifficulty(value) {
+  if (!DIFFICULTIES[value]) return;
+  difficulty = value;
+  document.querySelectorAll('[data-difficulty]').forEach(button => {
+    const active = button.dataset.difficulty === value;
+    button.classList.toggle('active', active); button.setAttribute('aria-pressed', String(active));
+  });
+  const ai = DIFFICULTIES[value];
+  $('difficultyHint').textContent = `最多记住 ${ai.capacity} 张牌 · 翻牌记住概率 ${Math.round(ai.remember * 100)}% · 预览每 1.5 秒最多尝试记一张`;
+}
+function actorName(actor) { return actor === 'human' ? (gameMode === 'pve' ? '玩家' : '玩家 1') : (gameMode === 'pve' ? '电脑' : '玩家 2'); }
+function setStatus(message) { $('statusText').textContent = message; }
+function rate(stats) { return stats.attempts ? `${Math.round(stats.matches / stats.attempts * 100)}%` : '—'; }
+function renderScores() {
+  for (const actor of ['human', 'ai']) {
+    $(actor + 'Score').textContent = state.scores[actor].toFixed(2);
+    const active = state.running && !state.paused && !state.busy && state.turn === actor;
+    $(actor + 'Panel').classList.toggle('active', active);
+    $(actor + 'TurnMark').textContent = active ? '●' : '';
+  }
+  if (state.round) {
+    $('liveStats').textContent = ['human','ai'].map(actor => {
+      const stats = state.round[actor];
+      return `${actorName(actor)}：翻牌 ${stats.flips} 次 · 成功率 ${rate(stats)} · 超时 ${stats.timeouts} 次`;
+    }).join('\n');
+  }
+}
+function shuffle(items) {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+function previewDuration() { return state.previewChoice === 'auto' ? LEVELS[state.level].preview : Number(state.previewChoice); }
+function startGame() {
+  invalidate();
+  state = freshState();
+  state.session = $('sessionSelect').value;
+  state.previewChoice = $('previewSelect').value;
+  state.level = state.session === 'campaign' ? 0 : Number(state.session);
+  state.running = true;
+  $('startScreen').hidden = true; $('gameScreen').hidden = false; $('homeButton').hidden = false;
+  $('board').parentElement.classList.remove('paused');
+  setupLevel();
+}
+function setupLevel() {
+  invalidate();
+  const level = LEVELS[state.level];
+  const values = shuffle(GLYPHS.slice()).slice(0, level.pairs);
+  state.cards = shuffle([...values, ...values]).map((value, id) => ({ id, value, matched: false, flipped: true }));
+  state.selected = []; state.matchedPairs = 0; state.busy = true; state.phase = 'preview'; state.focusId = 0;
+  state.memory = new Map(); state.memoryAge = new Map(); state.age = 0;
+  state.round = { level: state.level, human: counters(), ai: counters(), seconds: 0 };
+  state.levelStarted = performance.now(); state.levelPaused = 0;
+  $('stageNumber').textContent = String(state.level + 1);
+  $('stageMeta').textContent = `${level.size} × ${level.size} 网格 · ${level.pairs} 组配对${state.session === 'campaign' ? '' : ' · 单关练习'}`;
+  $('pairsLeft').textContent = `${level.pairs} 组`;
+  $('board').parentElement.classList.remove('results');
+  $('boardOverlay').hidden = true;
+  $('board').style.setProperty('--cols', String(level.size));
+  buildBoard(); renderScores();
+  const duration = previewDuration();
+  state.deadline = performance.now() + duration;
+  $('timerOwner').textContent = '牌面预览';
+  setStatus(`预览 ${duration / 1000} 秒，记住牌面位置！`);
+  startTicker();
+  later(() => {
+    seedAIMemoryFromPreview();
+    state.cards.forEach(card => { card.flipped = false; });
+    startTurn('human');
+  }, duration);
+}
+function buildBoard() {
+  const fragment = document.createDocumentFragment();
+  for (const card of state.cards) {
+    const button = document.createElement('button');
+    button.type = 'button'; button.dataset.id = String(card.id);
+    fragment.appendChild(button);
+  }
+  $('board').replaceChildren(fragment);
+  renderBoard();
+}
+// Update existing buttons; flipping a card must not discard keyboard focus.
+function renderBoard() {
+  if (!state.cards.length) return;
+  if (state.cards[state.focusId]?.matched) state.focusId = state.cards.find(card => !card.matched)?.id ?? 0;
+  for (const card of state.cards) {
+    const button = $('board').children[card.id];
+    button.className = `card${card.flipped ? ' flipped' : ''}${card.matched ? ' matched' : ''}`;
+    button.textContent = card.flipped && !card.matched ? card.value : '';
+    button.setAttribute('aria-label', card.matched ? `第 ${card.id + 1} 张，已配对` : card.flipped ? `第 ${card.id + 1} 张，${card.value}` : `第 ${card.id + 1} 张，未翻开`);
+    button.setAttribute('aria-disabled', String(state.busy || state.paused || card.matched || card.flipped || (gameMode === 'pve' && state.turn === 'ai')));
+    button.tabIndex = card.id === state.focusId && !card.matched ? 0 : -1;
+  }
+}
+function focusCard(id) {
+  state.focusId = id; renderBoard(); $('board').children[id]?.focus();
+}
+function focusBoardIfNeeded() {
+  const focused = document.activeElement;
+  if (focused === $('startButton') || focused === document.body || $('board').contains(focused) || $('boardOverlay').contains(focused)) focusCard(state.focusId);
+}
+function handleBoardKey(event) {
+  const button = event.target.closest('.card');
+  if (!button || state.paused) return;
+  const id = Number(button.dataset.id), size = LEVELS[state.level].size;
+  const steps = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -size, ArrowDown: size };
+  if (event.key in steps) {
+    event.preventDefault();
+    let next = id;
+    for (let count = 0; count < state.cards.length; count++) {
+      next = (next + steps[event.key] + state.cards.length) % state.cards.length;
+      if (!state.cards[next].matched) { focusCard(next); break; }
+    }
+  }
+  // Enter and Space use native button activation, with selectCard as the single guard.
+}
+function showTimer(seconds, fraction) {
+  $('timerValue').textContent = String(Math.max(0, Math.ceil(seconds * fraction)));
+  $('timer').style.setProperty('--progress', `${Math.max(0, Math.min(100, fraction * 100))}%`);
+}
+function startTurn(turn) {
+  if (!state.running || state.paused) return;
+  invalidate(); state.turn = turn; state.selected = []; state.busy = false; state.phase = 'turn';
+  state.deadline = performance.now() + LEVELS[state.level].seconds * 1000;
+  $('timerOwner').textContent = `${actorName(turn)}回合`;
+  setStatus(`${actorName(turn)}回合，请翻开两张牌`);
+  renderScores(); renderBoard(); focusBoardIfNeeded(); startTicker();
+  if (gameMode === 'pve' && turn === 'ai') scheduleAITurn();
+}
+function onTurnTimeout(nonce) {
+  if (!state.running || state.paused || state.nonce !== nonce || state.busy || state.phase !== 'turn') return;
+  const oldTurn = state.turn;
+  invalidate(); state.busy = true; state.phase = 'between';
+  state.round[oldTurn].timeouts++;
+  for (const id of state.selected) state.cards[id].flipped = false;
+  state.selected = [];
+  showTimer(0, 0); renderBoard(); renderScores();
+  setStatus(`${actorName(oldTurn)}超时，交换回合`);
+  later(() => startTurn(oldTurn === 'human' ? 'ai' : 'human'), 550);
+}
+function handleCardClick(event) {
+  const button = event.target.closest('.card');
+  if (!button || (gameMode === 'pve' && state.turn !== 'human')) return;
+  selectCard(Number(button.dataset.id), state.turn);
+}
+function rememberCard(card) {
+  if (gameMode !== 'pve') return;
+  const ai = DIFFICULTIES[difficulty];
+  if (Math.random() >= ai.remember) return;
+  state.memory.set(card.id, card.value); state.memoryAge.set(card.id, ++state.age);
+  const capacity = Math.min(state.cards.length, ai.capacity);
+  while (state.memory.size > capacity) {
+    let oldestId = null, oldestAge = Infinity;
+    for (const [id, age] of state.memoryAge) if (age < oldestAge) { oldestAge = age; oldestId = id; }
+    state.memory.delete(oldestId); state.memoryAge.delete(oldestId);
+  }
+}
+function seedAIMemoryFromPreview() {
+  if (gameMode !== 'pve') return;
+  const budget = Math.min(DIFFICULTIES[difficulty].capacity, Math.floor(previewDuration() / 1500));
+  for (const card of shuffle(state.cards.slice()).slice(0, budget)) rememberCard(card);
+}
+function selectCard(id, actor) {
+  if (!state.running || state.paused || state.busy || state.phase !== 'turn' || state.turn !== actor || !Number.isInteger(id)) return false;
+  // Check the actual deadline even if the periodic timer has not fired yet.
+  if (performance.now() >= state.deadline) { onTurnTimeout(state.nonce); return false; }
+  const card = state.cards[id];
+  if (!card || card.matched || card.flipped || state.selected.includes(id) || state.selected.length >= 2) return false;
+  state.focusId = id; card.flipped = true; state.selected.push(id);
+  state.round[actor].flips++; rememberCard(card); renderBoard(); renderScores();
+  if (state.selected.length === 1) { setStatus(`${actorName(actor)}已翻开一张，再选一张`); return true; }
+  state.round[actor].attempts++;
+  state.busy = true; state.phase = 'resolving';
+  clearInterval(turnTimer); turnTimer = null;
+  renderBoard(); renderScores();
+  later(resolvePair, 760);
+  return true;
+}
+function resolvePair() {
+  if (!state.running || state.paused || state.selected.length !== 2) return;
+  const [first, second] = state.selected.map(id => state.cards[id]);
+  const actor = state.turn;
+  state.phase = 'between';
+  if (first.value === second.value) {
+    first.matched = second.matched = true;
+    for (const card of [first, second]) { state.memory.delete(card.id); state.memoryAge.delete(card.id); }
+    const points = gameMode === 'pve' && actor === 'ai' ? .15 : 1;
+    state.scores[actor] = Math.round((state.scores[actor] + points) * 100) / 100;
+    state.round[actor].matches++;
+    state.round[actor].points = Math.round((state.round[actor].points + points) * 100) / 100;
+    state.matchedPairs++; state.selected = [];
+    $('pairsLeft').textContent = `${LEVELS[state.level].pairs - state.matchedPairs} 组`;
+    renderScores(); renderBoard();
+    if (state.matchedPairs >= LEVELS[state.level].pairs) { finishLevel(); return; }
+    setStatus(`${actorName(actor)}配对成功，获得 ${points.toFixed(2)} 分，继续行动`);
+    later(() => startTurn(actor), 600);
+  } else {
+    first.flipped = second.flipped = false; state.selected = [];
+    renderBoard(); setStatus('没有配对成功，交换回合');
+    later(() => startTurn(actor === 'human' ? 'ai' : 'human'), 560);
+  }
+}
+function chooseAIMove() {
+  const available = state.cards.filter(card => !card.matched && !card.flipped && !state.selected.includes(card.id)).map(card => card.id);
+  if (!available.length) return null;
+  const ai = DIFFICULTIES[difficulty], pick = ids => ids[Math.floor(Math.random() * ids.length)];
+  if (state.selected.length === 1) {
+    const value = state.cards[state.selected[0]].value; // The first card is already face up.
+    const known = available.filter(id => state.memory.get(id) === value);
+    if (known.length && Math.random() < ai.skill) return pick(known);
+    const unknown = available.filter(id => !state.memory.has(id));
+    return pick(unknown.length ? unknown : available);
+  }
+  if (Math.random() < ai.skill) {
+    const byValue = new Map();
+    for (const id of available) {
+      const value = state.memory.get(id);
+      if (value === undefined) continue;
+      const list = byValue.get(value) || []; list.push(id); byValue.set(value, list);
+    }
+    const pairs = [...byValue.values()].filter(ids => ids.length >= 2);
+    if (pairs.length) return pick(pick(pairs));
+  }
+  const unknown = available.filter(id => !state.memory.has(id));
+  return pick(unknown.length ? unknown : available);
+}
+function scheduleAITurn() {
+  const delay = DIFFICULTIES[difficulty].delay;
+  const act = () => {
+    if (gameMode !== 'pve' || !state.running || state.paused || state.turn !== 'ai' || state.busy) return;
+    const move = chooseAIMove();
+    if (move !== null && selectCard(move, 'ai') && state.selected.length === 1) later(act, delay);
+  };
+  later(act, delay);
+}
+function makeText(tag, text, className) {
+  const element = document.createElement(tag); element.textContent = text;
+  if (className) element.className = className;
+  return element;
+}
+function makeSummary(rounds, names = [actorName('human'), actorName('ai')]) {
+  const box = makeText('div', '', 'summary'), table = document.createElement('table');
+  const caption = document.createElement('caption'); caption.textContent = '各关得分与翻牌表现'; table.append(caption);
+  const head = document.createElement('thead'), row = document.createElement('tr');
+  for (const label of ['关卡 / 玩家', '得分', '翻牌', '成功率']) {
+    const cell = makeText('th', label); cell.scope = 'col'; row.append(cell);
+  }
+  head.append(row); table.append(head);
+  const body = document.createElement('tbody');
+  for (const round of rounds) {
+    ['human','ai'].forEach((actor, index) => {
+      const stats = round[actor], tr = document.createElement('tr');
+      const name = makeText('th', `${LEVELS[round.level].size}×${LEVELS[round.level].size} ${names[index]}`); name.scope = 'row'; tr.append(name);
+      for (const value of [stats.points.toFixed(2), stats.flips, rate(stats)]) tr.append(makeText('td', String(value)));
+      body.append(tr);
+    });
+  }
+  table.append(body); box.append(table);
+  const seconds = Math.round(rounds.reduce((sum, round) => sum + round.seconds, 0));
+  box.append(makeText('p', `有效用时 ${seconds} 秒（含预览和动画，不含暂停）`));
+  box.append(makeText('p', ['human','ai'].map((actor, i) => `${names[i]}超时 ${rounds.reduce((sum, r) => sum + r[actor].timeouts, 0)} 次`).join(' · ')));
+  return box;
+}
+function readHistory() {
+  try {
+    const data = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    if (!Array.isArray(data)) return [];
+    return data.filter(record => record && typeof record.date === 'string' && typeof record.result === 'string' &&
+      ['pve','pvp'].includes(record.mode) && record.scores && ['human','ai'].every(a => Number.isFinite(record.scores[a])) &&
+      Array.isArray(record.rounds) && record.rounds.length > 0 && record.rounds.length <= 3 && record.rounds.every(round =>
+        Number.isInteger(round.level) && LEVELS[round.level] && Number.isFinite(round.seconds) &&
+        ['human','ai'].every(a => round[a] && ['flips','attempts','matches','timeouts','points'].every(key => Number.isFinite(round[a][key]))))).slice(0, 20);
+  } catch { return []; }
+}
+function saveResult(result) {
+  history.unshift({ date: new Date().toISOString(), mode: gameMode, difficulty, session: state.session,
+    preview: state.previewChoice, scores: { ...state.scores }, result, rounds: structuredClone(state.rounds) });
+  history = history.slice(0, 20);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); historySaved = true; }
+  catch { historySaved = false; }
+}
+function showHistory() {
+  const container = $('historyContent'); container.replaceChildren();
+  container.append(makeText('p', '保留本浏览器最近 20 场已完成对局。不同模式、难度和预览时长分别标明。'));
+  if (!historySaved) container.append(makeText('p', '当前浏览器无法保存战绩，记录仅在本次打开期间保留。'));
+  if (!history.length) container.append(makeText('p', '还没有战绩，完成一场挑战或练习后就会出现在这里。'));
+  for (const record of history) {
+    const item = makeText('div', '', 'history-item');
+    const names = record.mode === 'pve' ? ['玩家','电脑'] : ['玩家 1','玩家 2'];
+    const mode = record.session === 'campaign' ? '三关挑战' : `${LEVELS[record.rounds[0].level].size}×${LEVELS[record.rounds[0].level].size} 单关练习`;
+    const difficultyName = { easy: '轻松', normal: '标准', hard: '挑战' }[record.difficulty] || '标准';
+    item.append(makeText('strong', `${mode} · ${record.result} · ${record.scores.human.toFixed(2)} : ${record.scores.ai.toFixed(2)}`));
+    const preview = record.preview === 'auto' ? '按棋盘调整' : `${Number(record.preview) / 1000} 秒`;
+    item.append(makeText('p', `${new Date(record.date).toLocaleString('zh-CN')} · ${record.mode === 'pve' ? '人机 / ' + difficultyName : '双人'} · 预览 ${preview}`));
+    const details = document.createElement('details'); details.append(makeText('summary', '查看各关表现'), makeSummary(record.rounds, names));
+    item.append(details); container.append(item);
+  }
+  openDialog('historyDialog');
+}
+function finishLevel() {
+  invalidate(); state.busy = true; state.phase = 'finished';
+  state.round.seconds = Math.max(0, (performance.now() - state.levelStarted - state.levelPaused) / 1000);
+  state.rounds.push(structuredClone(state.round));
+  renderScores(); renderBoard();
+  showTimer(0, 0); $('timerValue').textContent = '—'; $('timerOwner').textContent = '本关结束';
+  $('board').parentElement.classList.add('results');
+  const isFinal = state.session !== 'campaign' || state.level === LEVELS.length - 1;
+  let title, message;
+  if (isFinal) {
+    const difference = state.scores.human - state.scores.ai;
+    title = Math.abs(difference) < .001 ? '平局！' : `${actorName(difference > 0 ? 'human' : 'ai')}获胜！`;
+    message = `${state.session === 'campaign' ? '三关挑战' : '单关练习'}完成 · ${actorName('human')} ${state.scores.human.toFixed(2)} : ${state.scores.ai.toFixed(2)} ${actorName('ai')}`;
+    state.running = false; saveResult(title);
+  } else {
+    title = `第 ${state.level + 1} 关完成！`;
+    message = `当前总分 ${state.scores.human.toFixed(2)} : ${state.scores.ai.toFixed(2)}，下一关 ${LEVELS[state.level + 1].size} × ${LEVELS[state.level + 1].size}。`;
+  }
+  const overlay = $('boardOverlay'); overlay.replaceChildren();
+  const card = makeText('div', '', 'overlay-card');
+  card.append(makeText('div', isFinal ? '🏆' : '✨', 'overlay-icon'), makeText('h3', title), makeText('p', message), makeSummary(state.rounds));
+  if (isFinal && !historySaved) card.append(makeText('p', '浏览器无法保存战绩，本次记录暂存至关闭页面。'));
+  const actions = makeText('div', '', 'overlay-actions');
+  const mainButton = makeText('button', isFinal ? '再玩一局' : '进入下一关', 'primary'); mainButton.type = 'button';
+  mainButton.addEventListener('click', () => { if (isFinal) startGame(); else { state.level++; setupLevel(); } });
+  const home = makeText('button', '返回首页', 'secondary'); home.type = 'button'; home.addEventListener('click', goHome);
+  actions.append(mainButton, home); card.append(actions); overlay.append(card); overlay.hidden = false;
+  setStatus(isFinal ? '游戏结束 · 已生成战绩' : `第 ${state.level + 1} 关已完成`);
+  mainButton.focus();
+}
+function goHome() {
+  invalidate(); state.running = false; state.paused = false;
+  $('board').parentElement.classList.remove('paused');
+  $('boardOverlay').hidden = true; $('gameScreen').hidden = true; $('startScreen').hidden = false; $('homeButton').hidden = true;
+  $('startButton').focus();
+}
+
+const liveStats = makeText('p', '', 'helper'); liveStats.id = 'liveStats'; liveStats.style.whiteSpace = 'pre-line';
+$('pairsLeft').parentElement.after(liveStats);
+document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => setGameMode(button.dataset.mode)));
+document.querySelectorAll('[data-difficulty]').forEach(button => button.addEventListener('click', () => setDifficulty(button.dataset.difficulty)));
+$('startButton').addEventListener('click', startGame);
+$('restartButton').addEventListener('click', startGame);
+$('homeButton').addEventListener('click', goHome);
+$('board').addEventListener('click', handleCardClick);
+$('board').addEventListener('keydown', handleBoardKey);
+$('board').addEventListener('focusin', event => {
+  const button = event.target.closest('.card');
+  if (button) { state.focusId = Number(button.dataset.id); renderBoard(); }
+});
+$('rulesButton').addEventListener('click', () => openDialog('rulesDialog'));
+$('historyButton').addEventListener('click', showHistory);
+for (const [dialog, close] of [['rulesDialog','closeRulesButton'], ['historyDialog','closeHistoryButton']]) {
+  $(close).addEventListener('click', () => $(dialog).close());
+  $(dialog).addEventListener('close', resumeGame);
+}
+setGameMode('pve'); setDifficulty('normal');
+
+  </script>
+</body>
+</html>
